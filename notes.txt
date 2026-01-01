@@ -1,3 +1,4 @@
 1) in parallel worflows you have to return partial updates because in parallel workflows it is not expecting to get updated states simoultenusely. (remember this thing)
 2) partial updates in states is allowed in both sequential and parallel workflows. 
 3) we are using pydantic to get structured output from llm. (ex we want score:7 there are chances it might give score : seven so here we will explicitly tell to give us structured output)
+4) persistence is used to store memory so chatbots can remember what messages or input is feeded before + databases is used for industry to store messages. 
