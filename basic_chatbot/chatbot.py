@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from langgraph.graph.message import add_messages
 import os
 import uuid
+import time
 from datetime import datetime
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import HumanMessage, AIMessage
@@ -100,8 +101,21 @@ class ChatState(TypedDict):
 # Define chat node
 def chat_node(state: ChatState) -> ChatState:
     messages = state["messages"]
-    response = llm.invoke(messages)
-    return {"messages": [response]}
+    # Stream from LLM and collect full response
+    full_response = ""
+    for chunk in llm.stream(messages):
+        if chunk.content:
+            full_response += chunk.content
+    # Return complete AI message for state
+    return {"messages": [AIMessage(content=full_response)]}
+
+# Generator function for streaming
+def stream_llm_response(messages):
+    """Generator function for streaming LLM responses"""
+    for chunk in llm.stream(messages):
+        if chunk.content:
+            time.sleep(0.05)  # Add 20ms delay between chunks
+            yield chunk.content
 
 # Build graph
 @st.cache_resource
@@ -296,22 +310,29 @@ if user_input := st.chat_input("Type your message here..."):
             current_chat["title"]
         )
     
-    # Prepare state and config (use chat_id as thread_id for LangGraph)
-    state = {"messages": [HumanMessage(content=user_input)]}
-    config = {"configurable": {"thread_id": st.session_state.current_chat_id}}
-    
     # Get AI response
     with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            result = workflow.invoke(state, config=config)
-            ai_message = result["messages"][-1]
-            response_content = ai_message.content
-            st.markdown(response_content)
+        # Create message history for streaming
+        llm_messages = []
+        for msg in current_chat["messages"][:-1]:  # Exclude the just-added user message
+            if msg["role"] == "user":
+                llm_messages.append(HumanMessage(content=msg["content"]))
+            else:
+                llm_messages.append(AIMessage(content=msg["content"]))
+        llm_messages.append(HumanMessage(content=user_input))
+        
+        # Stream response using st.write_stream
+        full_response = st.write_stream(stream_llm_response(llm_messages))
+        
+        # Update workflow state in background (for checkpointing)
+        state = {"messages": [HumanMessage(content=user_input)]}
+        config = {"configurable": {"thread_id": st.session_state.current_chat_id}}
+        workflow.invoke(state, config=config)
     
     # Add AI response to current chat history
     current_chat["messages"].append({
         "role": "assistant",
-        "content": response_content
+        "content": full_response
     })
     
     st.rerun()
