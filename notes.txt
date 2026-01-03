@@ -3,3 +3,17 @@
 3) we are using pydantic to get structured output from llm. (ex we want score:7 there are chances it might give score : seven so here we will explicitly tell to give us structured output)
 4) persistence is used to store memory so chatbots can remember what messages or input is feeded before + databases is used for industry to store messages. 
 5) in ai models you have seen answers got generated token by token rather than all at same time this is concept of streaming, it increases user experience. 
+
+# to check how many python versions are there ? 
+py -0
+
+# to download specific virtual enviornment 
+py -3.11 -m venv {virtual_env_name} 
+
+# to deactivate any virtual enviornment 
+deactivate
+
+# to install virtual enviornment
+python -m venv {virtual env}
+{virtual env}\Scripts\activate
+

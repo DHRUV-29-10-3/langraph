@@ -1,2 +1,4 @@
 .env
 langgraph
+langsmith_demo/langsmith-masterclass/langsmith
+langsmith_demo/langsmith-masterclass/.env
