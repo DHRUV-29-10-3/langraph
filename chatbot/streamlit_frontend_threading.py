@@ -5,6 +5,7 @@ import uuid
 
 # st.session_state -> dict -> 
 
+#******************************** Helper functions ***************************************
 # Generate a unique thread ID for each session
 def generate_thread_id():
     return str(uuid.uuid4())
@@ -14,14 +15,17 @@ def reset_chat():
     st.session_state['thread_id'] = thread_id
     add_thread(st.session_state['thread_id'])
     st.session_state['message_history'] = []
-
+  
 def add_thread(thread_id):
-    if thread_id not in st.session_state:
-        st.session_state[thread_id] = []
+    if thread_id not in st.session_state["chat_threads"]:
+        st.session_state["chat_threads"].append(thread_id)
 
-def new_chat():
-    st.session_state['message_history'] = []
-    st.session_state['thread_id'] = generate_thread_id()
+def load_conversation(thread_id):
+    # Placeholder for loading thread-specific message history
+    state = chatbot.get_state(config = {'configurable': {'thread_id': thread_id}})
+    if state.values and "messages" in state.values:
+        return state.values["messages"]
+    return []
 
 # ******************************** Session State Initialization *******************************
 if 'message_history' not in st.session_state:
@@ -30,18 +34,37 @@ if 'message_history' not in st.session_state:
 if 'thread_id' not in st.session_state:
     st.session_state['thread_id'] = generate_thread_id()
 
-if "chat_threads" not in st.session_state:
+if "chat_threads" not in st.session_state: 
     st.session_state["chat_threads"] = []
 
-
+add_thread(st.session_state['thread_id'])
 
 
 # ******************************** Side bar ui ***************************************
-st.sidebar.title("LangGraph Chatbot")
-st.sidebar.button("New Chat", on_click=new_chat)
-st.sidebar.header("My conversations")
-st.sidebar.text(f"Thread ID: {st.session_state['thread_id']}")
 
+st.sidebar.title("LangGraph Chatbot")
+if st.sidebar.button("New Chat"):
+    reset_chat()
+
+st.sidebar.header("My conversations")
+
+
+for thread in st.session_state["chat_threads"]:
+    if st.sidebar.button(f"Thread ID: {thread}"):
+        st.session_state['thread_id'] = thread
+        messages = load_conversation(thread)
+
+        temp_message_history = []
+        for msg in messages:
+            if isinstance(msg, HumanMessage):
+                message_type = 'user'
+            else:
+                message_type = 'assistant'
+            temp_message_history.append({'role': message_type, 'content': msg.content})
+        st.session_state['message_history'] = temp_message_history 
+
+
+# ******************************** Main chat ui ***************************************
 
 
 # loading the conversation history
