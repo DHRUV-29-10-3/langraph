@@ -27,6 +27,7 @@ llm = ChatGoogleGenerativeAI(
 # -------------------
 # 2. Tools
 # -------------------
+
 # Tools
 search_tool = DuckDuckGoSearchRun(region="us-en")
 
