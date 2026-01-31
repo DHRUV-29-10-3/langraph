@@ -1,0 +1,3 @@
+1_subgraph.ipynb is 1st method of subgraph in which we basically is invoking subgraph from inside of node function of parent graph. 
+
+2_subgraph.ipynb is 2nd method of subgraph in which we basically sharing states of both togeather.
